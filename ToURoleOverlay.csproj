@@ -1,21 +1,34 @@
-<ItemGroup>
-  <Reference Include="BepInEx.Core">
-    <HintPath>libs/BepInEx.Core.dll</HintPath>
-  </Reference>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+  </PropertyGroup>
 
-  <Reference Include="BepInEx.IL2CPP">
-    <HintPath>libs/BepInEx.IL2CPP.dll</HintPath>
-  </Reference>
+  <ItemGroup>
+    <Reference Include="BepInEx.Core">
+      <HintPath>libs\BepInEx.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx.IL2CPP">
+      <HintPath>libs\BepInEx.Unity.IL2CPP.dll</HintPath>
+    </Reference>
+    <Reference Include="Harmony">
+      <HintPath>libs\Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="TownOfUs">
+      <HintPath>libs\TownOfUs.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>libs\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime" />
+    <Reference Include="System.Linq" />
+  </ItemGroup>
 
-  <Reference Include="Harmony">
-    <HintPath>libs/Harmony.dll</HintPath>  <!-- lub HarmonyLib.dll, jeśli tak nazwiesz -->
-  </Reference>
-
-  <Reference Include="UnityEngine.CoreModule">
-    <HintPath>libs/UnityEngine.CoreModule.dll</HintPath>
-  </Reference>
-
-  <Reference Include="TownOfUs">
-    <HintPath>libs/TownOfUs.dll</HintPath>
-  </Reference>
-</ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
