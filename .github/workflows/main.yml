@@ -16,11 +16,14 @@ jobs:
           Write-Host "== Current Directory =="
           Get-ChildItem -Recurse
 
-      - name: Add MSBuild to PATH
+      - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1
 
-      - name: Build and restore (msbuild)
-        run: msbuild ToURoleOverlay.csproj /t:Restore;Build /p:Configuration=Release
+      - name: Restore packages
+        run: msbuild ToURoleOverlay.csproj /t:Restore
+
+      - name: Build DLL
+        run: msbuild ToURoleOverlay.csproj /p:Configuration=Release
 
       - name: Upload compiled DLL
         uses: actions/upload-artifact@v4
