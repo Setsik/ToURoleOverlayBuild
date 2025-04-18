@@ -8,21 +8,24 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # 1️⃣ pokaż zawartość katalogu, żeby potwierdzić gdzie jesteśmy
-      - name: List files for debug
-        run: dir
+      - name: Show directory contents (debug)
+        run: |
+          echo "== Current Directory =="
+          dir
+          echo "== Subdirectories =="
+          dir /s
 
-      # 2️⃣ dołóż MSBuild
-      - uses: microsoft/setup-msbuild@v1
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v1
 
-      # 3️⃣ kompiluj — UWAGA: ścieżka *musi* zgadzać się z nazwą pliku w repo
-      - name: Build
+      - name: Build DLL
         run: msbuild ToURoleOverlay.csproj /p:Configuration=Release
 
-      # 4️⃣ zapisz artefakt
-      - uses: actions/upload-artifact@v4
+      - name: Upload compiled DLL
+        uses: actions/upload-artifact@v4
         with:
           name: ToURoleOverlay
           path: bin/Release/ToURoleOverlay.dll
