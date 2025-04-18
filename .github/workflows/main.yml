@@ -23,6 +23,7 @@ jobs:
 
       - name: Build DLL
         run: msbuild ToURoleOverlay.csproj /p:Configuration=Release
+        working-directory: ${{ github.workspace }}
 
       - name: Upload compiled DLL
         uses: actions/upload-artifact@v4
