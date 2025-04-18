@@ -3,20 +3,15 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
-
-    <!-- ogrom ostrzeżeń MSB3277 nie ma wpływu na DLL‑kę,
-         ale je wyciszymy, by log był czytelny -->
-    <NoWarn>MSB3277</NoWarn>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <!-- wszystkie potrzebne DLL z folderu libs -->
   <ItemGroup>
-    <Reference Include="BepInEx.Core"              HintPath="libs\BepInEx.Core.dll" />
-    <Reference Include="BepInEx.Unity.IL2CPP"      HintPath="libs\BepInEx.Unity.IL2CPP.dll" />
-    <Reference Include="Il2CppInterop.Runtime"     HintPath="libs\Il2CppInterop.Runtime.dll" />
-    <Reference Include="HarmonyLib"                HintPath="libs\Harmony.dll" />
-    <Reference Include="UnityEngine.CoreModule"    HintPath="libs\UnityEngine.CoreModule.dll" />
-    <Reference Include="Assembly-CSharp"           HintPath="libs\Assembly-CSharp.dll" />
-    <Reference Include="TownOfUs"                  HintPath="libs\TownOfUs.dll" />
+    <Reference Include="Assembly-CSharp"             HintPath="libs\Assembly-CSharp.dll" />
+    <Reference Include="BepInEx.Unity.IL2CPP"        HintPath="libs\BepInEx.Unity.IL2CPP.dll" />
+    <Reference Include="Harmony"                     HintPath="libs\Harmony.dll" />
+    <Reference Include="Il2CppInterop.Runtime"       HintPath="libs\Il2CppInterop.Runtime.dll" />
+    <Reference Include="TownOfUs"                    HintPath="libs\TownOfUs.dll" />
+    <Reference Include="UnityEngine.CoreModule"      HintPath="libs\UnityEngine.CoreModule.dll" />
   </ItemGroup>
 </Project>
