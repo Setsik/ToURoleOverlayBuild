@@ -14,18 +14,13 @@ jobs:
       - name: Show directory contents (debug)
         run: |
           Write-Host "== Current Directory =="
-          Get-ChildItem
-          Write-Host "== Subdirectories =="
           Get-ChildItem -Recurse
-
-      - name: Restore .NET packages
-        run: dotnet restore ToURoleOverlay.csproj
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1
 
-      - name: Build DLL
-        run: msbuild ToURoleOverlay.csproj /p:Configuration=Release
+      - name: Build and restore (msbuild)
+        run: msbuild ToURoleOverlay.csproj /t:Restore;Build /p:Configuration=Release
 
       - name: Upload compiled DLL
         uses: actions/upload-artifact@v4
