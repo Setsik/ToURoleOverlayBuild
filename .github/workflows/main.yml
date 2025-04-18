@@ -7,19 +7,22 @@ jobs:
   build:
     runs-on: windows-latest
 
+    defaults:
+      run:
+        working-directory: ./tou-build  # ← tu dokładna nazwa folderu, jaki tworzy GitHub
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Add MSBuild
+      - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1
 
-      - name: Build
-        working-directory: ..
+      - name: Build plugin
         run: msbuild ToURoleOverlay.csproj /p:Configuration=Release
 
       - name: Upload DLL
         uses: actions/upload-artifact@v4
         with:
           name: ToURoleOverlay
-          path: bin/Release/ToURoleOverlay.dll
+          path: tou-build/bin/Release/ToURoleOverlay.dll
