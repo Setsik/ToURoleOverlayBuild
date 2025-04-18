@@ -1,7 +1,7 @@
 // ────────────────────────────────────────────────────────────────
-// ToU Role Overlay – BepInEx 6 IL2CPP plugin
+// ToU Role Overlay – BepInEx 6 IL2CPP plugin
 // • Pokazuje role nad głowami w grze oraz listę ról w lobby
-// • Kompatybilne z Among Us 2023/2024 + TownOfUs 5.x + BepInEx 6
+// • Kompatybilne z Among Us 2023/2024 + TownOfUs 5.x + BepInEx 6
 // • Kompiluj jako netstandard2.1  (patrz csproj)
 // ────────────────────────────────────────────────────────────────
 
@@ -27,10 +27,8 @@ namespace ToURoleOverlay
 
         public override void Load()
         {
-            // rejestrujemy Behaviour w domenie IL2CPP
             ClassInjector.RegisterTypeInIl2Cpp<RoleOverlayBehaviour>();
 
-            // trwały obiekt — przeżyje zmianę scen
             var go = new GameObject("ToURoleOverlayObject");
             go.AddComponent<RoleOverlayBehaviour>();
             GameObject.DontDestroyOnLoad(go);
@@ -38,7 +36,7 @@ namespace ToURoleOverlay
             _harmony = new Harmony(Id);
             _harmony.PatchAll();
 
-            Logger.LogInfo($"{Name} {Version} loaded");
+            Log.LogInfo($"{Name} {Version} loaded");
         }
 
         public override bool Unload()
@@ -48,7 +46,6 @@ namespace ToURoleOverlay
         }
     }
 
-    /// <summary>MonoBehaviour odpowiedzialny za rysowanie overlaya.</summary>
     public class RoleOverlayBehaviour : MonoBehaviour
     {
         private GUIStyle _style;
@@ -65,7 +62,6 @@ namespace ToURoleOverlay
                 fontStyle  = FontStyle.Bold
             };
 
-            // prosta komenda konsolowa: wpisz „roles” i zobacz listę w logu
             ConsoleCommandHelper.Register("roles", () =>
                 BepInEx.Logging.Logger.CreateLogSource("ToURoleOverlay")
                     .LogInfo(GetAllRolesAsString()));
@@ -75,14 +71,11 @@ namespace ToURoleOverlay
         {
             if (AmongUsClient.Instance == null) return;
 
-            // w lobby – lewa góra; w grze – nad głowami
             if (!AmongUsClient.Instance.InGame)
                 DrawLobbyRoleList();
             else
                 DrawInGameOverHeads();
         }
-
-        #region Rysowanie
 
         private void DrawLobbyRoleList()
         {
@@ -111,7 +104,7 @@ namespace ToURoleOverlay
 
                 Vector3 world = pc.transform.position + Vector3.up * 0.6f;
                 Vector3 scr   = Camera.main.WorldToScreenPoint(world);
-                if (scr.z < 0) continue;            // za kamerą
+                if (scr.z < 0) continue;
 
                 string role = GetTouRole(pc);
                 string col  = ColorUtility.ToHtmlStringRGB(
@@ -125,22 +118,14 @@ namespace ToURoleOverlay
             }
         }
 
-        #endregion
-
-
-        #region Logika ról
-
-        /// <summary>Próbuje odczytać rolę TownOfUs/vanilla.</summary>
         private string GetTouRole(PlayerControl pc)
         {
             object roleObj = null;
 
-            // 1) TownOfUs – pole Role
             var roleField = pc.GetType().GetField("Role",
                            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             roleObj = roleField?.GetValue(pc);
 
-            // 2) inne mody – właściwość CustomRole
             if (roleObj == null)
             {
                 var prop = pc.GetType().GetProperty("CustomRole",
@@ -148,11 +133,9 @@ namespace ToURoleOverlay
                 roleObj = prop?.GetValue(pc, null);
             }
 
-            // 3) vanilla
             if (roleObj == null)
                 return pc.Data?.Role.ToString() ?? "None";
 
-            // "SheriffMod"  → "Sheriff"
             string raw = roleObj.GetType().Name;
             return raw.EndsWith("Mod") ? raw[..^3] : raw;
         }
@@ -164,11 +147,8 @@ namespace ToURoleOverlay
                 sb.AppendLine($"{pc.name}: {GetTouRole(pc)}");
             return sb.ToString();
         }
-
-        #endregion
     }
 
-    // ─────────── util: najprostszy rejestrator komend do konsoli Reactor/TownOfUs
     internal static class ConsoleCommandHelper
     {
         private static readonly Harmony h = new("ToURoleOverlay.Console");
