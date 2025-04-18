@@ -18,6 +18,12 @@ jobs:
           Write-Host "== Subdirectories =="
           Get-ChildItem -Recurse
 
+      - name: Add NuGet to PATH
+        uses: nuget/setup-nuget@v1
+
+      - name: Restore NuGet packages
+        run: nuget restore ToURoleOverlay.csproj
+
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1
 
