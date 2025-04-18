@@ -1,9 +1,9 @@
-// -----------------------------------------------------------------------------
-//  ToU Role Overlay – BepInEx IL2CPP plugin
-//  Pokazuje prawdziwe role ToU wszystkich graczy (GUI / menu / podczas gry).
-//  Solo‑test: log do BepInEx + napis „Overlay ACTIVE” widoczny zawsze.
-//  Testowane: Among Us v2023.11.x  •  ToU v5.2.1  •  BepInEx 6‑preview
-// -----------------------------------------------------------------------------
+// ────────────────────────────────────────────────────────────────
+// ToU Role Overlay – BepInEx 6 IL2CPP plugin
+// • Pokazuje role nad głowami w grze oraz listę ról w lobby
+// • Kompatybilne z Among Us 2023/2024 + TownOfUs 5.x + BepInEx 6
+// • Kompiluj jako netstandard2.1  (patrz csproj)
+// ────────────────────────────────────────────────────────────────
 
 using System;
 using System.Reflection;
@@ -15,42 +15,43 @@ using UnityEngine;
 
 namespace ToURoleOverlay
 {
-    [BepInPlugin("me.yourname.touroles", "ToU Role Overlay", "1.0.0")]
+    [BepInPlugin(Id, Name, Version)]
     [BepInProcess("Among Us.exe")]
     public class ToURoleOverlayPlugin : BasePlugin
     {
-        public static ManualLogSource Log;   // <-- udostępniamy logger dla innych klas
+        public const string Id      = "me.setsik.touroleoverlay";
+        public const string Name    = "ToU Role Overlay";
+        public const string Version = "1.0.0";
+
         private Harmony _harmony;
 
         public override void Load()
         {
-            Log = Logger;                    // zapamiętujemy logger
-
-            // Rejestrujemy własny MonoBehaviour w domenie IL2CPP
+            // rejestrujemy Behaviour w domenie IL2CPP
             ClassInjector.RegisterTypeInIl2Cpp<RoleOverlayBehaviour>();
 
-            // Tworzymy nieśmiertelny GameObject z naszym Behaviour
+            // trwały obiekt — przeżyje zmianę scen
             var go = new GameObject("ToURoleOverlayObject");
             go.AddComponent<RoleOverlayBehaviour>();
             GameObject.DontDestroyOnLoad(go);
 
-            _harmony = new Harmony("me.yourname.touroles");
+            _harmony = new Harmony(Id);
             _harmony.PatchAll();
 
-            Logger.LogInfo("✅ ToURoleOverlay successfully loaded!");
+            Logger.LogInfo($"{Name} {Version} loaded");
         }
 
         public override bool Unload()
         {
-            _harmony.UnpatchSelf();
+            _harmony?.UnpatchSelf();
             return true;
         }
     }
 
+    /// <summary>MonoBehaviour odpowiedzialny za rysowanie overlaya.</summary>
     public class RoleOverlayBehaviour : MonoBehaviour
     {
         private GUIStyle _style;
-        private float _nextLogTime = 0f;   // do ograniczenia spamowania logu
 
         public RoleOverlayBehaviour(IntPtr ptr) : base(ptr) { }
 
@@ -60,57 +61,133 @@ namespace ToURoleOverlay
             {
                 fontSize   = 16,
                 alignment  = TextAnchor.UpperLeft,
-                richText   = true
+                richText   = true,
+                fontStyle  = FontStyle.Bold
             };
+
+            // prosta komenda konsolowa: wpisz „roles” i zobacz listę w logu
+            ConsoleCommandHelper.Register("roles", () =>
+                BepInEx.Logging.Logger.CreateLogSource("ToURoleOverlay")
+                    .LogInfo(GetAllRolesAsString()));
         }
 
         void OnGUI()
         {
-            // Solo‑test: log i napis "Overlay ACTIVE" → widać nawet w menu/lobby
-            if (Time.time >= _nextLogTime)
-            {
-                ToURoleOverlayPlugin.Log.LogInfo("[ToURoleOverlay] Overlay ACTIVE – OnGUI tick");
-                _nextLogTime = Time.time + 10f;   // loguj co 10 sekund
-            }
-            GUI.Label(new Rect(10f, 10f, 300f, 22f),
-                      "<color=#00FF00><b>Overlay ACTIVE</b></color>",
-                      _style);
+            if (AmongUsClient.Instance == null) return;
 
-            // Jeśli nie jesteśmy w grze – nie pokazuj listy ról
-            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.InGame)
-                return;
+            // w lobby – lewa góra; w grze – nad głowami
+            if (!AmongUsClient.Instance.InGame)
+                DrawLobbyRoleList();
+            else
+                DrawInGameOverHeads();
+        }
 
-            float y = 35f;   // zaczynamy listę trochę niżej
+        #region Rysowanie
+
+        private void DrawLobbyRoleList()
+        {
+            float y = 20f;
+            GUI.Label(new Rect(15, y, 400, 25),
+                      "<color=#FFFF00><b>Role List:</b></color>", _style);
+            y += 25;
+
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                string roleName = GetTouRole(pc);
-                string color = pc.Data != null
-                    ? ColorUtility.ToHtmlStringRGB(PlayerControl.GameOptions.GetPlayerColor(pc.Data.ColorId))
-                    : "FFFFFF";
+                string role = GetTouRole(pc);
+                string col  = ColorUtility.ToHtmlStringRGB(
+                              PlayerControl.GameOptions.GetPlayerColor(pc.Data.ColorId));
 
-                GUI.Label(new Rect(15f, y, 600f, 22f),
-                          $"<color=#{color}>{pc.name}: {roleName}</color>",
-                          _style);
-                y += 20f;
+                GUI.Label(new Rect(15, y, 400, 22),
+                          $"<color=#{col}>{pc.name}</color>: {role}", _style);
+                y += 20;
             }
         }
 
-        // Próbuje najpierw customowego pola Role (ToU),
-        // a gdyby coś poszło nie tak – zwraca rolę z vanilli
+        private void DrawInGameOverHeads()
+        {
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc?.Data == null) continue;
+
+                Vector3 world = pc.transform.position + Vector3.up * 0.6f;
+                Vector3 scr   = Camera.main.WorldToScreenPoint(world);
+                if (scr.z < 0) continue;            // za kamerą
+
+                string role = GetTouRole(pc);
+                string col  = ColorUtility.ToHtmlStringRGB(
+                              PlayerControl.GameOptions.GetPlayerColor(pc.Data.ColorId));
+
+                var rect = new Rect(scr.x - 60,
+                                    Screen.height - scr.y - 9,
+                                    120, 18);
+
+                GUI.Label(rect, $"<color=#{col}>{role}</color>", _style);
+            }
+        }
+
+        #endregion
+
+
+        #region Logika ról
+
+        /// <summary>Próbuje odczytać rolę TownOfUs/vanilla.</summary>
         private string GetTouRole(PlayerControl pc)
         {
-            FieldInfo roleField = pc.GetType().GetField("Role",
-                                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-            if (roleField != null)
+            object roleObj = null;
+
+            // 1) TownOfUs – pole Role
+            var roleField = pc.GetType().GetField("Role",
+                           BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            roleObj = roleField?.GetValue(pc);
+
+            // 2) inne mody – właściwość CustomRole
+            if (roleObj == null)
             {
-                object roleObj = roleField.GetValue(pc);
-                if (roleObj != null)
-                {
-                    string rawName = roleObj.GetType().Name;
-                    return rawName.EndsWith("Mod") ? rawName[..^3] : rawName;
-                }
+                var prop = pc.GetType().GetProperty("CustomRole",
+                          BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                roleObj = prop?.GetValue(pc, null);
             }
-            return pc.Data?.Role.ToString() ?? "Unknown";
+
+            // 3) vanilla
+            if (roleObj == null)
+                return pc.Data?.Role.ToString() ?? "None";
+
+            // "SheriffMod"  → "Sheriff"
+            string raw = roleObj.GetType().Name;
+            return raw.EndsWith("Mod") ? raw[..^3] : raw;
+        }
+
+        private string GetAllRolesAsString()
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var pc in PlayerControl.AllPlayerControls)
+                sb.AppendLine($"{pc.name}: {GetTouRole(pc)}");
+            return sb.ToString();
+        }
+
+        #endregion
+    }
+
+    // ─────────── util: najprostszy rejestrator komend do konsoli Reactor/TownOfUs
+    internal static class ConsoleCommandHelper
+    {
+        private static readonly Harmony h = new("ToURoleOverlay.Console");
+        private static readonly System.Collections.Generic.Dictionary<string, Action> cmds = new();
+
+        static ConsoleCommandHelper()
+        {
+            var awake = AccessTools.Method(typeof(InnerNet.InnerNetClient), "Awake");
+            h.Patch(awake, postfix: new HarmonyMethod(typeof(ConsoleCommandHelper), nameof(Postfix)));
+        }
+
+        internal static void Register(string name, Action act)
+        {
+            if (!cmds.ContainsKey(name)) cmds.Add(name, act);
+        }
+
+        private static void Postfix()
+        {
+            foreach (var kv in cmds) ConsoleCommands.AddCommand(kv.Key, kv.Value);
         }
     }
 }
