@@ -1,14 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
+<ItemGroup>
+  <Reference Include="BepInEx.Core">
+    <HintPath>libs/BepInEx.Core.dll</HintPath>
+  </Reference>
 
-  <ItemGroup>
-    <Reference Include="BepInEx"><HintPath>libs/BepInEx.Core.dll</HintPath></Reference>
-    <Reference Include="BepInEx.IL2CPP"><HintPath>libs/BepInEx.IL2CPP.dll</HintPath></Reference>
-    <Reference Include="HarmonyLib"><HintPath>libs/Harmony.dll</HintPath></Reference>
-    <Reference Include="UnityEngine.CoreModule"><HintPath>libs/UnityEngine.CoreModule.dll</HintPath></Reference>
-    <Reference Include="TownOfUs"><HintPath>libs/TownOfUs.dll</HintPath></Reference>
-  </ItemGroup>
-</Project>
+  <Reference Include="BepInEx.IL2CPP">
+    <HintPath>libs/BepInEx.IL2CPP.dll</HintPath>
+  </Reference>
+
+  <Reference Include="Harmony">
+    <HintPath>libs/Harmony.dll</HintPath>  <!-- lub HarmonyLib.dll, jeśli tak nazwiesz -->
+  </Reference>
+
+  <Reference Include="UnityEngine.CoreModule">
+    <HintPath>libs/UnityEngine.CoreModule.dll</HintPath>
+  </Reference>
+
+  <Reference Include="TownOfUs">
+    <HintPath>libs/TownOfUs.dll</HintPath>
+  </Reference>
+</ItemGroup>
