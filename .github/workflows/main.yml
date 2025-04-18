@@ -13,20 +13,19 @@ jobs:
 
       - name: Show directory contents (debug)
         run: |
-          echo "== Current Directory =="
-          dir
-          echo "== Subdirectories =="
-          dir /s
+          Write-Host "== Current Directory =="
+          Get-ChildItem
+          Write-Host "== Subdirectories =="
+          Get-ChildItem -Recurse
 
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1
 
       - name: Build DLL
         run: msbuild ToURoleOverlay.csproj /p:Configuration=Release
-        working-directory: ./tou-build
 
       - name: Upload compiled DLL
         uses: actions/upload-artifact@v4
         with:
           name: ToURoleOverlay
-          path: tou-build/bin/Release/ToURoleOverlay.dll
+          path: bin/Release/ToURoleOverlay.dll
