@@ -11,10 +11,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Add MSBuild to PATH
+      - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1
 
-      - name: Build plugin
+      - name: Build
+        working-directory: ..
         run: msbuild ToURoleOverlay.csproj /p:Configuration=Release
 
       - name: Upload DLL
